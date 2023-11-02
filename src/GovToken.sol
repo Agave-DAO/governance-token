@@ -60,7 +60,7 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 
 				uint256 deposited = deposits[msg.sender][token];
 
-				require(amount <= deposited, "Amount too large");
+				require(amount <= deposited && amount > 0, "Amount issue");
 
 				(WeightedToken memory tok, ) = getWeightedToken(token);
 
