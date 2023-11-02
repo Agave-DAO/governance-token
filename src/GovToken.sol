@@ -58,9 +58,9 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 
 		function redeem(address token, uint256 amount) external notLocked(msg.sender) {
 
-				uint256 deposited = deposits[msg.sender][token];
+				require(amount > 0, "Amount is zero");
 
-				require(amount <= deposited && amount > 0, "Amount issue");
+				deposits[msg.sender][token] -= amount;
 
 				(WeightedToken memory tok, ) = getWeightedToken(token);
 
