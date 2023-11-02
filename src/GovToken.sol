@@ -26,7 +26,6 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 
 		event Deposit(address user, address token, uint depositAmount);
 		event Redeem(address user, address token, uint redeemAmount);
-		event Transfer(address indexed from, address indexed to, uint256 value);
 		event LockedUntil(uint256 timeToUnlock);
 		event TokenAdded(address token, uint256 weight, uint256 maxDeposits);
 		event TokenRemoved(address token);
