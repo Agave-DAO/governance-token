@@ -100,7 +100,7 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 						}
 				}
 				if (!exists){
-					 allTokens.push(tok.token);
+					 allTokens.push(token);
 				}
 				
 				emit TokenAdded(token, weight, maxDeposits);
