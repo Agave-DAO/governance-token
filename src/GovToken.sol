@@ -94,12 +94,14 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 				// add to allTokens only once
 				bool exists;
 				for (uint i; i < allTokens.length ; i++){
-						if (tok.token == allTokens[i]) {
+						if (token == allTokens[i]) {
 								exists = true;
 								break;
 						}
 				}
-				if (!exists) allTokens.push(tok.token);
+				if (!exists){
+					 allTokens.push(tok.token);
+				}
 				
 				emit TokenAdded(token, weight, maxDeposits);
 		}
