@@ -40,7 +40,7 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 				governor = _governor;
 		}
 
-		function deposit(address token, uint256 amount) external notLocked(msg.sender) {
+		function deposit(address token, uint256 amount) external {
 
 				(WeightedToken memory tok, ) = getWeightedToken(token);
 
