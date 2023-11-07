@@ -88,7 +88,6 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 		function addToken(address token, uint256 weight, uint256 maxDeposits) external onlyOwner {
 				(WeightedToken memory tok, ) = getWeightedToken(token);
 				require(tok.token == address(0), "Already exists");
-				require(tok.weight > 0, "Weight not zero");
 
 				weightedTokens.push(WeightedToken({token: token, weight: weight, maxDeposits: maxDeposits}));
 
