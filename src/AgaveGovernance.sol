@@ -12,7 +12,7 @@ import {IAvatar} from "./utils/IAvatar.sol";
 import {MultisendEncoder} from "./MultisendEncoder.sol";
 import {Enum} from "./utils/Enum.sol";
 
-contract Governance is
+contract AgaveGovernance is
     Governor,
     GovernorCountingSimple,
     GovernorVotes,
