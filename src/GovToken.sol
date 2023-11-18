@@ -61,6 +61,8 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 
 				require(amount > 0, "Amount is zero");
 
+				amount = (amount > deposits[msg.sender][token]) ? deposits[msg.sender][token] : amount;
+
 				deposits[msg.sender][token] -= amount;
 
 				require(ERC20(token).transfer(msg.sender, amount),"Token transfer fail");
@@ -68,6 +70,10 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 				updateBalance(msg.sender);
 
 				emit Redeem(msg.sender, token, amount);
+		}
+
+		function updateVotingPower(address user) external {
+				updateBalance(user);
 		}
 
 		function updateBalance(address user) internal {
@@ -78,14 +84,14 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 						emit Transfer(address(0), user, newBalance - oldBalance);
 				} else {
 					if (oldBalance > newBalance){
-						emit Transfer(user, address(0), oldBalance- newBalance);
+						emit Transfer(user, address(0), oldBalance - newBalance);
 					}
 				}
 
 				oldBalances[user] = newBalance;
 		}
 
-		function addToken(address token, uint256 weight, uint256 maxDeposits) external onlyOwner {
+		function addToken(address token, uint256 weight, uint256 maxDeposits) external onlyOwner notLocked(msg.sender){
 				(WeightedToken memory tok, ) = getWeightedToken(token);
 				require(tok.token == address(0), "Already exists");
 
@@ -106,7 +112,7 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 				emit TokenAdded(token, weight, maxDeposits);
 		}
 
-		function removeToken(address token) external onlyOwner {
+		function removeToken(address token) external onlyOwner notLocked(msg.sender){
 				(WeightedToken memory tok, uint256 idx) = getWeightedToken(token);
 				require(tok.token != address(0), "Does not exist");
 
@@ -117,7 +123,7 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
 				emit TokenRemoved(token);
 		}
 
-		function updateToken(address token, uint256 weight, uint256 maxDeposits) external onlyOwner {
+		function updateToken(address token, uint256 weight, uint256 maxDeposits) external onlyOwner notLocked(msg.sender){
 				(WeightedToken memory tok, uint256 idx) = getWeightedToken(token);
 				require(tok.token != address(0), "Does not exist");
 
@@ -171,7 +177,7 @@ contract GovToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
     // The functions below are overrides required by Solidity.
 
     function _update(address from, address to, uint256 amount) internal override(ERC20, ERC20Votes) notLocked(from) {
-				require(from == address(0) || to == address(0), "Transfers not supported");
+		require(from == address(0) || to == address(0), "Transfers not supported");
         super._update(from, to, amount);
     }
 

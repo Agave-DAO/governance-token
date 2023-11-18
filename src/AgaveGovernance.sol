@@ -18,39 +18,46 @@ contract AgaveGovernance is
     GovernorVotes,
     GovernorVotesQuorumFraction
 {
-		ITimeLock govToken;
+    ITimeLock govToken;
 
-		/// @dev Functions restricted to `onlyGovernance()` are only callable by `owner`.
+    /// @dev Functions restricted to `onlyGovernance()` are only callable by `owner`.
     address public owner;
     /// @dev Address of the multisend contract that this contract should use to bundle transactions.
     address public multisend;
     /// @dev Address that this module will pass transactions to.
     address public target;
 
-		/// @dev Emitted each time the multisend address is set.
+    /// @dev Emitted each time the multisend address is set.
     event MultisendSet(address indexed multisend);
     /// @dev Emitted each time the Target is set.
     event TargetSet(address indexed previousTarget, address indexed newTarget);
     /// @dev Emitted each time ownership is transferred.
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     /// @dev Emitted upon successful setup
     event OZGovernorModuleSetUp(address indexed owner, address indexed target);
 
-		/// @dev Transaction execution failed.
+    /// @dev Transaction execution failed.
     error TransactionsFailed();
 
     constructor(
-				address _owner,
-				address _target,
-				address _multisend,
+        address _owner,
+        address _target,
+        address _multisend,
         IVotes _token
-    ) Governor("Governance") GovernorVotes(_token) GovernorVotesQuorumFraction(4) {
-				govToken = ITimeLock(address(_token));
-				owner = _owner;
+    )
+        Governor("Governance")
+        GovernorVotes(_token)
+        GovernorVotesQuorumFraction(4)
+    {
+        govToken = ITimeLock(address(_token));
+        owner = _owner;
         target = _target;
         multisend = _multisend;
-				emit OZGovernorModuleSetUp(_owner, _target);
-		}
+        emit OZGovernorModuleSetUp(_owner, _target);
+    }
 
     function votingDelay() public pure override returns (uint256) {
         return 0; // 1 day
@@ -64,27 +71,37 @@ contract AgaveGovernance is
         return 0;
     }
 
-		/// @dev Execute via a Zodiac avatar, like a Gnosis Safe.
+    /// @dev Execute via a Zodiac avatar, like a Gnosis Safe.
     function _execute(
-        uint256, /* proposalId */
+        uint256 /* proposalId */,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 /*descriptionHash*/
     ) internal {
-        (address to, uint256 value, bytes memory data, Enum.Operation operation) = MultisendEncoder.encodeMultisend(
-            multisend,
-            targets,
-            values,
-            calldatas
+        (
+            address to,
+            uint256 value,
+            bytes memory data,
+            Enum.Operation operation
+        ) = MultisendEncoder.encodeMultisend(
+                multisend,
+                targets,
+                values,
+                calldatas
+            );
+        bool success = IAvatar(target).execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
         );
-        bool success = IAvatar(target).execTransactionFromModule(to, value, data, operation);
         if (!success) {
             revert TransactionsFailed();
         }
     }
 
-		/// @dev Transfers ownership of this contract to a new address.
+    /// @dev Transfers ownership of this contract to a new address.
     /// @param _owner Address of the account to be set as the new owner.
     /// @notice Can only be called by `owner`.
     function transferOwnership(address _owner) public onlyGovernance {
@@ -115,7 +132,9 @@ contract AgaveGovernance is
 
     // The functions below are overrides required by Solidity.
 
-    function state(uint256 proposalId) public view override returns (ProposalState) {
+    function state(
+        uint256 proposalId
+    ) public view override returns (ProposalState) {
         return super.state(proposalId);
     }
 
@@ -132,7 +151,14 @@ contract AgaveGovernance is
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal override returns (uint48) {
-        return super._queueOperations(proposalId, targets, values, calldatas, descriptionHash);
+        return
+            super._queueOperations(
+                proposalId,
+                targets,
+                values,
+                calldatas,
+                descriptionHash
+            );
     }
 
     function _executeOperations(
@@ -142,7 +168,13 @@ contract AgaveGovernance is
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal override {
-        super._executeOperations(proposalId, targets, values, calldatas, descriptionHash);
+        super._executeOperations(
+            proposalId,
+            targets,
+            values,
+            calldatas,
+            descriptionHash
+        );
     }
 
     function _cancel(
@@ -158,36 +190,37 @@ contract AgaveGovernance is
     //     return super._executor();
     // }
 
-		/// @dev Returns `owner`.
+    /// @dev Returns `owner`.
     /// @notice This differs slightly from a typical Zodiac mod, where `owner` and `avatar`/`executor` would be distinguished.
     function _executor() internal view override returns (address) {
         return owner;
     }
 
-		function _castVote(
+    function _castVote(
         uint256 proposalId,
         address account,
         uint8 support,
         string memory reason
     ) internal override returns (uint256) {
-				uint256 proposalDeadline = proposalDeadline(proposalId);
-				if (govToken.globalTimeLock() < proposalDeadline){
-						govToken.timeLock(proposalDeadline);
-				}
+        uint256 proposalDeadline = proposalDeadline(proposalId);
+        if (govToken.globalTimeLock() < proposalDeadline) {
+            govToken.timeLock(proposalDeadline);
+        }
         return super._castVote(proposalId, account, support, reason);
     }
 
-		function _castVote(
+    function _castVote(
         uint256 proposalId,
         address account,
         uint8 support,
         string memory reason,
         bytes memory params
     ) internal override returns (uint256) {
-				uint256 proposalDeadline = proposalDeadline(proposalId);
-				if (govToken.globalTimeLock() < proposalDeadline){
-						govToken.timeLock(proposalDeadline);
-				}
+        uint256 proposalDeadline = proposalDeadline(proposalId);
+        if (govToken.globalTimeLock() < proposalDeadline) {
+            govToken.timeLock(proposalDeadline);
+        }
+        govToken.updateVotingPower(account);
         return super._castVote(proposalId, account, support, reason, params);
     }
 }
